@@ -1,0 +1,20 @@
+﻿<UserControl
+	xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+	xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+	xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+	xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+	mc:Ignorable="d"
+	x:Class="WpfApplication1.UserControl1"
+	x:Name="UserControl"
+	d:DesignWidth="640" d:DesignHeight="480">
+	
+	<DataGrid x:Name="grid" ItemsSource="{Binding Path=Set1, Mode=TwoWay}" HeadersVisibility="Column" HorizontalScrollBarVisibility="Visible" VerticalScrollBarVisibility="Visible" Margin="0,0,-1,0" SelectionUnit="Cell" MinColumnWidth="50">
+		<DataGrid.ContextMenu>
+        	<ContextMenu>
+            	<MenuItem Header="Generate data">
+            		<MenuItem Header="HoG from image" Click="HogActive"/>
+            	</MenuItem>
+        	</ContextMenu>
+    	</DataGrid.ContextMenu>
+	</DataGrid>
+</UserControl>
