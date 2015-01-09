@@ -118,7 +118,6 @@ namespace WpfApplication1
                 // Вычисляем grayscale
                 for (int i = 1; i < pix.Length; i += channels)
                 {
-                  //  MessageBox.Show(pix[i] + " ");
                     pix[i] = (byte)(0.299 * pix[i] + 0.587 * pix[i + 1] + 0.114 * pix[i + 2]);
                 }
 
@@ -162,7 +161,7 @@ namespace WpfApplication1
                 int count_blocks_x = (count_cells_x - count_cells_in_block + step_block) / step_block; // количество блоков по x
                 int count_blocks_y = (count_cells_y - count_cells_in_block + step_block) / step_block; // количество блоков по y
 
-                int veclen = count_blocks_x * count_blocks_y; // всего блоков
+                int veclen = count_blocks_x * count_blocks_y; // Всего блоков
                 double[] vec = new double[count_bins * veclen]; // Вектор бинов; double потому что будем нормализовать; На каждый блок по count_bins значений - бины гистограммы
 
                 // Перебираем все блоки и формируем итоговый массив
@@ -203,7 +202,6 @@ namespace WpfApplication1
                     dtable.Rows.Add("");
                 }
                 dtable.Rows[el][grid.CurrentColumn.DisplayIndex] = string.Join(";", vec);
-                MessageBox.Show(vec.Length + " " + (vec.Length / count_bins) + " " + b.PixelHeight + " " + b.PixelWidth);
             }
         }
     }
