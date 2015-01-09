@@ -24,8 +24,11 @@ namespace WpfApplication1
         private SaveFileDialog save;
         private OpenFileDialog open;
 
+        public static MainWindow window;
+
         public MainWindow()
         {
+            window = this;
             this.InitializeComponent();
 
             save = new SaveFileDialog();
@@ -66,7 +69,6 @@ namespace WpfApplication1
         /// <param name="e"></param>
         private void MenuItem_Click(object sender, RoutedEventArgs e)
         {
-            // Создать
             AddTabItem();
         }
 
@@ -80,7 +82,17 @@ namespace WpfApplication1
             bool? s = open.ShowDialog();
 
             if (s == true)
-                ((TabItemObject)tabItems[control01.SelectedIndex]).cntrl.dset.ReadXml(open.FileName);
+            {
+                string name = open.SafeFileName.LastIndexOf('.') < 0 ? open.SafeFileName : open.SafeFileName.Substring(0, open.SafeFileName.LastIndexOf('.'));
+
+                AddTabItem();
+                control01.SelectedIndex = control01.Items.Count - 1;
+                TabItemObject obj = ((TabItemObject)tabItems[control01.SelectedIndex]);
+                obj.cntrl.dset.ReadXml(open.FileName);
+                obj.save_name = name;
+                obj.save_path = open.FileName;
+                ((UserControl2)((TabItem)control01.SelectedItem).Header).label.Content = name;
+            }
         }
 
         /// <summary>
@@ -90,10 +102,48 @@ namespace WpfApplication1
         /// <param name="e"></param>
         private void MenuItem_Click_2(object sender, RoutedEventArgs e)
         {
+            TabItemObject obj = ((TabItemObject)tabItems[control01.SelectedIndex]);
+            string save_path = obj.save_path;
+            if (save_path == null) MenuItem_Click_3(sender, e);
+            else
+            {
+                // Если уже сохраняли, то не просим ввести имя заново
+                obj.cntrl.dset.WriteXml(save_path);
+                obj.is_saved = true;
+                ((UserControl2)((TabItem)control01.SelectedItem).Header).label.Content = obj.save_name;
+            }
+        }
+
+        /// <summary>
+        /// Обработка нажатия кнопки "Сохранить как"
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void MenuItem_Click_3(object sender, RoutedEventArgs e)
+        {
             bool? s = save.ShowDialog();
 
             if (s == true)
-                ((TabItemObject)tabItems[control01.SelectedIndex]).cntrl.dset.WriteXml(save.FileName);
+            {
+                TabItemObject obj = ((TabItemObject)tabItems[control01.SelectedIndex]);
+                obj.cntrl.dset.WriteXml(save.FileName);
+
+                string name = save.SafeFileName.LastIndexOf('.') < 0 ? save.SafeFileName : save.SafeFileName.Substring(0, save.SafeFileName.LastIndexOf('.'));
+                ((UserControl2)((TabItem)control01.SelectedItem).Header).label.Content = name;
+                obj.is_saved = true;
+                obj.save_path = save.FileName;
+                obj.save_name = name;
+            }
+        }
+
+        /// <summary>
+        /// Добавить звёздочку к имени если изменили что-то
+        /// </summary>
+        /// <param name="cnt"></param>
+        public void Change(UserControl1 cnt)
+        {
+            if (!((UserControl2)((TabItem)control01.SelectedItem).Header).label.Content.ToString().EndsWith("*"))
+                ((UserControl2)((TabItem)control01.SelectedItem).Header).label.Content += "*";
         }
 
         /// <summary>
@@ -142,7 +192,7 @@ namespace WpfApplication1
                 w = false;
                 foreach (TabItemObject it in tabItems)
                 {
-                    if (it.name.Equals("Set" + last_number))
+                    if (it.save_name.Equals("Set" + last_number))
                     {
                         last_number++;
                         w = true;
@@ -161,13 +211,12 @@ namespace WpfApplication1
         {
 
             public bool is_saved; // были ли изменения после последнего сохранения
-            public string save_path; // путь сохранения
-            public string name; // имя вкладки
+            public string save_path, save_name; // путь сохранения и название вкладки
             public UserControl1 cntrl;
 
             public TabItemObject(string name)
             {
-                this.name = name;
+                save_name = name;
                 is_saved = true;
             }
         }

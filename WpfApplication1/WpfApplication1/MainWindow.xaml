@@ -66,6 +66,7 @@
                 <MenuItem Header="New Set" Foreground="Black" Background="#001D1B1B" Click="MenuItem_Click" FontSize="16"/>
                 <MenuItem Header="Open" Background="#00000000" Foreground="Black" Click="MenuItem_Click_1" FontSize="16"/>
                 <MenuItem Header="Save" Foreground="Black" Click="MenuItem_Click_2" FontSize="16"/>
+                <MenuItem Header="Save As" Foreground="Black" Click="MenuItem_Click_3" FontSize="16"/>
             </MenuItem>
         </Menu>
         <Rectangle Grid.ColumnSpan="3" Fill="#FF3D6CCA" Height="48" Stroke="#FF3D6CCA" VerticalAlignment="Top" IsManipulationEnabled="True" ForceCursor="True" OverridesDefaultStyle="True" MouseLeftButtonDown="Rectangle_MouseLeftButtonDown"/>

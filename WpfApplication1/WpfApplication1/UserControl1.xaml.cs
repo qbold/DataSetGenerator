@@ -36,14 +36,8 @@ namespace WpfApplication1
 
             grid.DataContext = dset;
 
-            AddColumn();
-            AddColumn();
-            AddColumn();
-            AddColumn();
-            AddColumn();
-            AddColumn();
-            AddColumn();
-            AddColumn();
+            for (int i = 0; i < 20; i++)
+                AddColumn();
         }
 
         /// <summary>
@@ -203,6 +197,16 @@ namespace WpfApplication1
                 }
                 dtable.Rows[el][grid.CurrentColumn.DisplayIndex] = string.Join(";", vec);
             }
+        }
+
+        /// <summary>
+        /// Изменение значения ячейки
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void grid_CurrentCellChanged(object sender, DataGridCellEditEndingEventArgs e)
+        {
+            MainWindow.window.Change(this);
         }
     }
 }
