@@ -41,7 +41,7 @@ namespace WpfApplication1
         }
 
         /// <summary>
-        /// Клик по кнопке контекстного меню "Добавить столбец"
+        /// Клик по кнопке контекстного меню "Добавить столбец" (Кнопка убрана)
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>

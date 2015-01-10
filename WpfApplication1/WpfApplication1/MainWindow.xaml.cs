@@ -43,13 +43,30 @@ namespace WpfApplication1
         }
 
         /// <summary>
+        /// Если есть несохранённые изменения в какой-либо вкладке, то true
+        /// </summary>
+        /// <returns></returns>
+        private bool isUnsaved()
+        {
+            foreach (TabItemObject obj in tabItems)
+            {
+                if (!obj.is_saved) return true;
+            }
+            return false;
+        }
+
+        /// <summary>
         /// Обработка нажатия кнопки закрытия приложения
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
         private void Button_Click_1(object sender, RoutedEventArgs e)
         {
-            this.Close();
+            bool uns = isUnsaved();
+            if (!uns || MessageBox.Show("Really close the window? There are unsaved changes.", "Closing", MessageBoxButton.YesNo) == MessageBoxResult.Yes)
+            {
+                this.Close();
+            }
         }
 
         /// <summary>
@@ -143,7 +160,10 @@ namespace WpfApplication1
         public void Change(UserControl1 cnt)
         {
             if (!((UserControl2)((TabItem)control01.SelectedItem).Header).label.Content.ToString().EndsWith("*"))
+            {
                 ((UserControl2)((TabItem)control01.SelectedItem).Header).label.Content += "*";
+                ((TabItemObject)tabItems[control01.SelectedIndex]).is_saved = false;
+            }
         }
 
         /// <summary>
