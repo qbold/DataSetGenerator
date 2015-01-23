@@ -8,12 +8,13 @@
 	x:Name="UserControl"
 	d:DesignWidth="640" d:DesignHeight="480">
 	
-	<DataGrid x:Name="grid" ItemsSource="{Binding Path=Set1, Mode=TwoWay}" HeadersVisibility="Column" HorizontalScrollBarVisibility="Visible" VerticalScrollBarVisibility="Visible" Margin="0,0,-1,0" SelectionUnit="Cell" MinColumnWidth="50" SelectionMode="Single" EnableColumnVirtualization="True" CanUserSortColumns="False" MaxColumnWidth="400" CellEditEnding="grid_CurrentCellChanged">
+	<DataGrid x:Name="grid" ItemsSource="{Binding Path=Set1, Mode=TwoWay}" HeadersVisibility="Column" HorizontalScrollBarVisibility="Visible" VerticalScrollBarVisibility="Visible" Margin="0,0,-1,0" SelectionUnit="Cell" MinColumnWidth="50" EnableColumnVirtualization="True" CanUserSortColumns="False" MaxColumnWidth="400" CellEditEnding="grid_CurrentCellChanged">
 		<DataGrid.ContextMenu>
         	<ContextMenu>
-            	<MenuItem Header="Generate data">
-            		<MenuItem Header="HoG from image" Click="HogActive"/>
+            	<MenuItem Header="Fill data">
+            		<MenuItem Header="R-HoG" Click="HogActive2"/>
             	</MenuItem>
+            	<MenuItem Header="Clear" Click="Clear"/>
         	</ContextMenu>
     	</DataGrid.ContextMenu>
 	</DataGrid>
