@@ -11,4 +11,6 @@ C:\Users\Qbold\Documents\Expression\Blend 4\Projects\WpfApplication1\WpfApplicat
 C:\Users\Qbold\Documents\Expression\Blend 4\Projects\WpfApplication1\WpfApplication1\obj\Debug\UserControl1.g.cs
 C:\Users\Qbold\Documents\Expression\Blend 4\Projects\WpfApplication1\WpfApplication1\obj\Debug\UserControl2.baml
 C:\Users\Qbold\Documents\Expression\Blend 4\Projects\WpfApplication1\WpfApplication1\obj\Debug\UserControl2.g.cs
+C:\Users\Qbold\Documents\Expression\Blend 4\Projects\WpfApplication1\WpfApplication1\obj\Debug\Window1.baml
+C:\Users\Qbold\Documents\Expression\Blend 4\Projects\WpfApplication1\WpfApplication1\obj\Debug\Window1.g.cs
 C:\Users\Qbold\Documents\Expression\Blend 4\Projects\WpfApplication1\WpfApplication1\obj\Debug\WpfApplication1.csprojResolveAssemblyReference.cache

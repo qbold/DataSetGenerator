@@ -104,6 +104,27 @@ namespace WpfApplication1
         }
 
         /// <summary>
+        /// Заполнить выделенные ячейки текстом
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        public void FillText(object sender, RoutedEventArgs e)
+        {
+            Window1 wind = new Window1();
+            bool? b = wind.ShowDialog();
+            if (b == true)
+            {
+
+                IList<DataGridCellInfo> l = grid.SelectedCells; // список выбранных ячеек
+                foreach (DataGridCellInfo inf in l)
+                {
+                    dtable.Rows[grid.Items.IndexOf(inf.Item)][grid.Columns.IndexOf(inf.Column)] = wind.textBox.Text;
+                }
+                MainWindow.window.Change(this);
+            }
+        }
+
+        /// <summary>
         /// Открыть диалоговое окно для чтения изображений и заполнения таблицы данными гистограмм ориентированных градиентов
         /// </summary>
         /// <param name="sender"></param>
@@ -222,6 +243,12 @@ namespace WpfApplication1
                     int Dx = pix[(i2 + sess_index_y) * channels + 1] - pix[(i1 + sess_index_y) * channels + 1]; // градиент по x
                     int Dy = pix[(i + next_index_y) * channels + 1] - pix[(i + prev_index_y) * channels + 1]; // градиент по y
 
+                    //  if (Dx * Dx + Dy * Dy < 0.225)
+                    //  {
+                    //      Dx = 0;
+                    //      Dy = 0;
+                    //  }
+
                     // Прибавляем на 1 значение в нужном бине гистограммы данной ячейки
                     // Math.Atan2 возвращает угол из интервала (-PI; PI). Делаем значение из интервала (0; 2*PI), затем приводим к виду (0; 1)
                     // Чтобы получить номер бина гистограммы, домножим значение из интервала (0; 1) на количество бинов и возьмём целую часть
@@ -275,6 +302,7 @@ namespace WpfApplication1
                 for (int k = 0; k < count_bins; k++)
                 {
                     vec[k + ind_i] /= norm;
+                    vec[k + ind_i] = Math.Sqrt(vec[k + ind_i]);
                 }
             }
             return vec;

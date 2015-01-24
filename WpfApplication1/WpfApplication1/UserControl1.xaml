@@ -13,6 +13,7 @@
         	<ContextMenu>
             	<MenuItem Header="Fill data">
             		<MenuItem Header="R-HoG" Click="HogActive2"/>
+            		<MenuItem Header="Text" Click="FillText"/>
             	</MenuItem>
             	<MenuItem Header="Clear" Click="Clear"/>
         	</ContextMenu>
