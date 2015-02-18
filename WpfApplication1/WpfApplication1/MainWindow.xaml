@@ -11,14 +11,14 @@
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="{x:Type Control}">
-                    	<Grid Height="44" Width="53" d:LayoutOverrides="Width, Height, Margin">
-                    		<Grid.Effect>
-                    			<BlurEffect Radius="2"/>
-                    		</Grid.Effect>
-                    		<Grid.Background>
-                    			<ImageBrush ImageSource="X.png"/>
-                    		</Grid.Background>
-                    	</Grid>
+                        <Grid Height="44" Width="53" d:LayoutOverrides="Width, Height, Margin">
+                            <Grid.Effect>
+                                <BlurEffect Radius="2"/>
+                            </Grid.Effect>
+                            <Grid.Background>
+                                <ImageBrush ImageSource="X.png"/>
+                            </Grid.Background>
+                        </Grid>
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
@@ -38,20 +38,20 @@
             <Setter Property="IsEnabled" Value="True"/>
             <Setter Property="FocusVisualStyle" Value="{DynamicResource ControlStyle2}"/>
         </Style>
-		<Style TargetType="TabItem">
-			<Setter Property="BorderBrush" Value="#FF3D6CCA"/>
-			<Setter Property="Background" Value="#FFF9F9F9"/>
-		</Style>
-	
-		<Style TargetType="TabControl">
-			<Setter Property="Margin" Value="12,47,0,1"/>
-			<Setter Property="BorderBrush" Value="#FF3D6CCA"/>
-			<Setter Property="Grid.ColumnSpan" Value="2"/>
-			<Setter Property="Grid.Column" Value="1"/>
-		</Style>
+        <Style TargetType="TabItem">
+            <Setter Property="BorderBrush" Value="#FF3D6CCA"/>
+            <Setter Property="Background" Value="#FFF9F9F9"/>
+        </Style>
+
+        <Style TargetType="TabControl">
+            <Setter Property="Margin" Value="12,47,0,1"/>
+            <Setter Property="BorderBrush" Value="#FF3D6CCA"/>
+            <Setter Property="Grid.ColumnSpan" Value="2"/>
+            <Setter Property="Grid.Column" Value="1"/>
+        </Style>
     </Window.Resources>
-	
-	
+
+
 
     <Grid x:Name="LayoutRoot">
         <Grid.ColumnDefinitions>
@@ -76,6 +76,16 @@
             </Button.CacheMode>
         </Button>
         <TextBlock Grid.Column="1" Height="30" Margin="95,8,196,0" TextWrapping="Wrap" Text="DataSet Generator" VerticalAlignment="Top" FontFamily="Aharoni" FontSize="26.667" Foreground="White" MouseLeftButtonDown="Rectangle_MouseLeftButtonDown"/>
-        <TabControl Name="control01" Margin="12,46,0,1"/>
+        <TabControl Name="control01" Margin="12.44,46,0.56,0" Grid.ColumnSpan="2"/>
+        <Rectangle Fill="#FFF4F4F5" HorizontalAlignment="Left" Stroke="Black" Width="5" Grid.Column="2" Margin="35,8,0,6" Cursor="SizeWE" Opacity="0" MouseMove="Rectangle_MouseMove" MouseLeftButtonDown="Rectangle_MouseDown" MouseLeftButtonUp="Rectangle_MouseLeftButtonUp" Tag="2"/>
+        <Rectangle Grid.ColumnSpan="3" Fill="#FFF4F4F5" HorizontalAlignment="Left" Height="4" Stroke="Black" VerticalAlignment="Top" Width="623" Margin="8,0,0,0" Opacity="0" Tag="4" MouseLeftButtonDown="Rectangle_MouseDown" MouseLeftButtonUp="Rectangle_MouseLeftButtonUp" MouseMove="Rectangle_MouseMove" Cursor="SizeNS"/>
+        <Rectangle Fill="#FFF4F4F5" HorizontalAlignment="Left" Height="8" Stroke="Black" VerticalAlignment="Top" Width="10" Grid.Column="2" Margin="30.44,0,-0.44,0" Opacity="0" Cursor="SizeNESW" Tag="6" MouseLeftButtonDown="Rectangle_MouseDown" MouseLeftButtonUp="Rectangle_MouseLeftButtonUp" MouseMove="Rectangle_MouseMove"/>
+        <Rectangle Fill="#FFF4F4F5" HorizontalAlignment="Left" Height="6" Stroke="Black" VerticalAlignment="Top" Width="8" MouseLeftButtonDown="Rectangle_MouseDown" MouseLeftButtonUp="Rectangle_MouseLeftButtonUp" MouseMove="Rectangle_MouseMove" Opacity="0" Cursor="SizeNWSE" Tag="5"/>
+        <Rectangle Fill="#FFF4F4F5" HorizontalAlignment="Left" Height="18" Stroke="Black" VerticalAlignment="Top" Width="21" MouseLeftButtonDown="Rectangle_MouseDown" MouseLeftButtonUp="Rectangle_MouseLeftButtonUp" MouseMove="Rectangle_MouseMove" Opacity="0" Cursor="SizeNESW" Tag="9" Margin="45,462,0,0"/>
+        <Rectangle Fill="#FFF4F4F5" HorizontalAlignment="Left" Height="6" Stroke="Black" VerticalAlignment="Top" Width="8" MouseLeftButtonDown="Rectangle_MouseDown" MouseLeftButtonUp="Rectangle_MouseLeftButtonUp" MouseMove="Rectangle_MouseMove" Opacity="0" Cursor="SizeNWSE" Tag="10" Margin="32.44,474,-0.44,0" Grid.Column="2"/>
+        <Rectangle Grid.ColumnSpan="2" Fill="#FFF4F4F5" HorizontalAlignment="Center" Height="4" Stroke="Black" VerticalAlignment="Bottom" Width="566" Margin="0,0,8,0" Opacity="0" Tag="8" MouseLeftButtonDown="Rectangle_MouseDown" MouseLeftButtonUp="Rectangle_MouseLeftButtonUp" MouseMove="Rectangle_MouseMove" Cursor="SizeNS" Grid.Column="1"/>
+        <Rectangle Fill="#FFF4F4F5" HorizontalAlignment="Left" Stroke="Black" Width="4" Margin="0,8,0,395" Cursor="SizeWE" Opacity="0" MouseMove="Rectangle_MouseMove" MouseLeftButtonDown="Rectangle_MouseDown" MouseLeftButtonUp="Rectangle_MouseLeftButtonUp" Tag="1"/>
+        <Rectangle Fill="#FFF4F4F5" HorizontalAlignment="Left" Stroke="Black" Width="4" Margin="45,85,0,18" Cursor="SizeWE" Opacity="0" MouseMove="Rectangle_MouseMove" MouseLeftButtonDown="Rectangle_MouseDown" MouseLeftButtonUp="Rectangle_MouseLeftButtonUp" Tag="1"/>
+        <Rectangle Fill="#FFF4F4F5" HorizontalAlignment="Left" Height="3" Stroke="Black" VerticalAlignment="Top" Width="45" Margin="0,82,0,0" Opacity="0" Tag="8" MouseLeftButtonDown="Rectangle_MouseDown" MouseLeftButtonUp="Rectangle_MouseLeftButtonUp" MouseMove="Rectangle_MouseMove" Cursor="SizeNS"/>
     </Grid>
 </Window>

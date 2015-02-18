@@ -3,6 +3,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using Microsoft.Win32;
+using System.Windows.Shapes;
 
 
 namespace WpfApplication1
@@ -34,7 +35,7 @@ namespace WpfApplication1
             save = new SaveFileDialog();
             save.AddExtension = true;
             save.DefaultExt = "xml";
-            save.Filter = "XML документ|*.xml";
+            save.Filter = "XML документ|*.xml|Файл libsvm|*";
             open = new OpenFileDialog();
             open.Filter = "XML документ|*.xml";
 
@@ -256,6 +257,88 @@ namespace WpfApplication1
         private void exit_but_MouseLeave(object sender, MouseEventArgs e)
         {
             exit_but.Style = old;
+        }
+
+        /// <summary>
+        /// Тип ресайза
+        /// </summary>
+        private byte type_resize;
+        private double oldx = -1, oldy = -1;
+        private const byte LEFT = 1, RIGHT = 2, UP = 3, DOWN = 4;
+
+        /// <summary>
+        /// Правый ресайз нажали кнопку
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void Rectangle_MouseDown(object sender, MouseButtonEventArgs e)
+        {
+            Point p = e.GetPosition(this);
+            oldx = p.X;
+            oldy = p.Y;
+
+            Rectangle rect = sender as Rectangle;
+            //  rect.CaptureMouse();
+            e.Handled = true;
+
+            type_resize = (byte)int.Parse((string)rect.Tag);
+        }
+
+        /// <summary>
+        /// Правый ресайз отпустили кнопку
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void Rectangle_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+        {
+            Rectangle rect = sender as Rectangle;
+            rect.ReleaseMouseCapture();
+            // MessageBox.Show("Release");
+
+            oldx = -1;
+            oldy = -1;
+            type_resize = 0;
+        }
+
+        /// <summary>
+        /// Двигаем мышью (изменяем размер окна)
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void Rectangle_MouseMove(object sender, MouseEventArgs e)
+        {
+            Rectangle rect = sender as Rectangle;
+            if (oldx >= 0 && rect.IsMouseCaptured)
+            {
+                Point p = e.GetPosition(this);
+                double dx = p.X - oldx;
+                double dy = p.Y - oldy;
+
+                if ((type_resize & LEFT) != 0)
+                {
+                    // сдвигаем налево и увеличиваем размер на dx
+                    Left += dx;
+                    Width -= dx;
+                }
+                else if ((type_resize & RIGHT) != 0)
+                { // увеличиваем размер на dx
+                    Width += dx;
+                }
+
+                if ((type_resize & UP) != 0)
+                {
+                    // сдвигаем налево и увеличиваем размер на dy
+                    Top += dy;
+                    Height -= dy;
+                }
+                else if ((type_resize & DOWN) != 0)
+                { // увеличиваем размер на dy
+                    Height += dy;
+                }
+
+                oldx = p.X;
+                oldy = p.Y;
+            }
         }
     }
 }

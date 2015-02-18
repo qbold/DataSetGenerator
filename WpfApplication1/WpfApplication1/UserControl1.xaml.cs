@@ -5,6 +5,7 @@ using Microsoft.Win32;
 using System;
 using System.Windows.Media.Imaging;
 using System.Collections.Generic;
+using libsvm;
 
 namespace WpfApplication1
 {
@@ -32,18 +33,26 @@ namespace WpfApplication1
 
             this.InitializeComponent();
 
-            dset = new DataSet();
-            dset.Tables.Add("Set1");
-            dtable = dset.Tables["Set1"];
+            CreateDataSet();
 
-            grid.DataContext = dset;
-
-            for (int i = 0; i < 20; i++)
+            for (int i = 0; i < 9; i++)
                 AddColumn();
-            for (int i = 0; i < 40; i++)
+            for (int i = 0; i < 17; i++)
             {
                 dtable.Rows.Add(dtable.NewRow());
             }
+
+            grid.DataContext = dset;
+        }
+
+        /// <summary>
+        /// Инициализация DataSet
+        /// </summary>
+        private void CreateDataSet()
+        {
+            dset = new DataSet();
+            dset.Tables.Add("Set1");
+            dtable = dset.Tables["Set1"];
         }
 
         /// <summary>
@@ -97,9 +106,105 @@ namespace WpfApplication1
                 IList<DataGridCellInfo> l = grid.SelectedCells; // список выбранных ячеек
                 foreach (DataGridCellInfo inf in l)
                 {
-                    dtable.Rows[grid.Items.IndexOf(inf.Item)][grid.Columns.IndexOf(inf.Column)] = "";
+                    int a = grid.Items.IndexOf(inf.Item), b = grid.Columns.IndexOf(inf.Column);
+                    if (a >= dtable.Rows.Count) dtable.Rows.Add(dtable.NewRow());
+                    dtable.Rows[a][b] = "";
                 }
                 MainWindow.window.Change(this);
+            }
+        }
+
+        /// <summary>
+        /// SVM
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        public void SVMgo(object sender, RoutedEventArgs e)
+        {
+            IList<DataGridCellInfo> l = grid.SelectedCells; // список выбранных ячеек
+
+            SVM s = null;
+            if (l.Count > 1)
+            {
+                List<List<double>> l2 = new List<List<double>>(l.Count);
+                for (int i = 0; i < l.Count; i++)
+                {
+                    try
+                    {
+                        DataGridCellInfo inf = l[i];
+                        List<double> l3 = new List<double>(Array.ConvertAll(((string)dtable.Rows[grid.Items.IndexOf(inf.Item)][grid.Columns.IndexOf(inf.Column)]).Split(new char[] { ';' }), a => double.Parse(a.Trim())));
+                        l3.Insert(0, double.Parse((string)(dtable.Rows[grid.Items.IndexOf(inf.Item)][grid.Columns.IndexOf(inf.Column) + 1])));
+                        l2.Add(l3);
+                    }
+                    catch (Exception e2)
+                    {
+                    }
+                }
+                s = ML.getSVMObject(l2);
+            }
+
+            Window2 w = new Window2();
+            w.svm = s;
+            // w.Start();
+            w.Show();
+        }
+
+        /// <summary>
+        /// Добавить строки в таблицу
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        public void RowAdd(object sender, RoutedEventArgs e)
+        {
+            RowNumber r = new RowNumber();
+            if (r.ShowDialog() == true)
+            {
+                int s = r.GetNumber;
+                for (int i = 0; i < s; i++)
+                {
+                    dtable.Rows.Add(dtable.NewRow());
+                }
+            }
+        }
+
+        /// <summary>
+        /// Добавить колонки в таблицу
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        public void ColAdd(object sender, RoutedEventArgs e)
+        {
+            RowNumber r = new RowNumber();
+            if (r.ShowDialog() == true)
+            {
+                int s = r.GetNumber;
+
+                DataTable t = dtable.Copy();
+
+                int col = dtable.Columns.Count;
+                int rw = dtable.Rows.Count;
+
+                CreateDataSet();
+
+                for (int i = 0; i < col + s; i++)
+                {
+                    AddColumn();
+                }
+
+                for (int i = 0; i < rw; i++)
+                {
+                    dtable.Rows.Add(dtable.NewRow());
+                }
+
+                for (int i = 0; i < col; i++)
+                {
+                    for (int j = 0; j < rw; j++)
+                    {
+                        dtable.Rows[j][dtable.Columns[i]] = t.Rows[j][t.Columns[i]];
+                    }
+                }
+
+                grid.DataContext = dset;
             }
         }
 
@@ -114,11 +219,12 @@ namespace WpfApplication1
             bool? b = wind.ShowDialog();
             if (b == true)
             {
-
                 IList<DataGridCellInfo> l = grid.SelectedCells; // список выбранных ячеек
                 foreach (DataGridCellInfo inf in l)
                 {
-                    dtable.Rows[grid.Items.IndexOf(inf.Item)][grid.Columns.IndexOf(inf.Column)] = wind.textBox.Text;
+                    int a = grid.Items.IndexOf(inf.Item), b1 = grid.Columns.IndexOf(inf.Column);
+                    if (a >= dtable.Rows.Count) dtable.Rows.Add(dtable.NewRow());
+                    dtable.Rows[a][b1] = wind.textBox.Text;
                 }
                 MainWindow.window.Change(this);
             }
@@ -135,37 +241,55 @@ namespace WpfApplication1
 
             if (s == true)
             {
-                BitmapImage b = null;
                 string[] names = open_image.FileNames;
 
-                IList<DataGridCellInfo> l = grid.SelectedCells; // список выбранных ячеек
-                DataGridCellInfo inf;
-                int index = 0;
-
-                foreach (string file_name in names)
+                Window3 w = new Window3();
+                w.Count = names.Length;
+                if (w.ShowDialog() == true)
                 {
-                    if (index >= l.Count) break;
-                    inf = l[index++];
+                    BitmapImage b = null;
 
-                    b = new BitmapImage();
-                    // Загружаем изображение и уменьшаем его до 176х144
-                    b.BeginInit();
-                    b.UriSource = new System.Uri(file_name);
-                    b.DecodePixelHeight = 144;
-                    b.DecodePixelWidth = 176;
-                    b.EndInit();
+                    IList<DataGridCellInfo> l = grid.SelectedCells; // список выбранных ячеек
+                    DataGridCellInfo inf;
+                    int index = 0;
 
-                    double[] vec = HoG(b);
+                    foreach (string file_name in names)
+                    {
+                        if (index >= l.Count) break;
+                        // inf = l[index++];
 
-                    //int el = grid.Items.IndexOf(grid.CurrentItem);
-                    //   if (dtable.Rows.Count == el)
-                    //  {
-                    //       dtable.Rows.InsertAt(dtable.NewRow(), dtable.Rows.Count);
-                    //   }
-                    //   dtable.Rows[el][grid.CurrentColumn.DisplayIndex] = string.Join(";", vec);
-                    dtable.Rows[grid.Items.IndexOf(inf.Item)][grid.Columns.IndexOf(inf.Column)] = string.Join(";", vec);
+                        b = new BitmapImage();
+                        // Загружаем изображение и уменьшаем его до 176х144
+                        b.BeginInit();
+                        b.UriSource = new System.Uri(file_name);
+                        b.DecodePixelHeight = 144;
+                        b.DecodePixelWidth = 176;
+                        b.EndInit();
+
+                        b.StartTransforms(w.CountScales, w.CountShifts, w.CountBlurs, w.CountRotates);
+
+                        // Если есть искажённые копии
+                        while (b.HasNext())
+                        {
+                            if (index >= l.Count) break;
+                            inf = l[index++];
+
+                            // Генерируем HoG искажённой копии
+                            double[] vec = b.GenerateNext();
+
+                            //int el = grid.Items.IndexOf(grid.CurrentItem);
+                            //   if (dtable.Rows.Count == el)
+                            //  {
+                            //       dtable.Rows.InsertAt(dtable.NewRow(), dtable.Rows.Count);
+                            //   }
+                            //   dtable.Rows[el][grid.CurrentColumn.DisplayIndex] = string.Join(";", vec);
+                            int a = grid.Items.IndexOf(inf.Item), b1 = grid.Columns.IndexOf(inf.Column);
+                            if (a >= dtable.Rows.Count) dtable.Rows.Add(dtable.NewRow());
+                            dtable.Rows[a][b1] = string.Join(";", vec);
+                        }
+                    }
+                    MainWindow.window.Change(this);
                 }
-                MainWindow.window.Change(this);
             }
         }
 
@@ -199,114 +323,6 @@ namespace WpfApplication1
                  dtable.Rows[el][grid.CurrentColumn.DisplayIndex] = string.Join(";", vec);
              }
          }*/
-
-        /// <summary>
-        /// Построение гистограммы ориентированных градиентов
-        /// </summary>
-        /// <param name="pix"></param>
-        /// <returns></returns>
-        private double[] HoG(BitmapImage b)
-        {
-            // Копируем пиксели
-            int channels = b.Format.BitsPerPixel / 8;
-            int stride = b.PixelWidth * channels;
-            byte[] pix = new byte[stride * b.PixelHeight];
-            b.CopyPixels(pix, stride, 0);
-
-            int count_pixels_in_cell = 8;
-            int count_cells_in_block = 4;
-            int step_block = 2;
-            int count_bins = 9;
-
-            // Вычисляем grayscale
-            for (int i = 1; i < pix.Length; i += channels)
-            {
-                pix[i] = (byte)(0.299 * pix[i] + 0.587 * pix[i + 1] + 0.114 * pix[i + 2]);
-            }
-
-            // Вычисляем направления (углы) градиента изображения и записываем в массив гистограмму по ячейке
-            int count_cells_x = b.PixelWidth / count_pixels_in_cell; // количество ячеек по x
-            int count_cells_y = b.PixelHeight / count_pixels_in_cell; // количество ячеек по y
-
-            int[,] cells = new int[count_bins, count_cells_x * count_cells_y]; // массив, в котором будут храниться гистограммы для каждой ячейки
-            for (int j = 0; j < b.PixelHeight; j++)
-            {
-                int sess_index_y = j * b.PixelWidth;
-                int next_index_y = (j + 1 >= b.PixelHeight ? j : j + 1) * b.PixelWidth;
-                int prev_index_y = (j - 1 <= 0 ? 0 : j - 1) * b.PixelWidth;
-                for (int i = 0; i < b.PixelWidth; i++)
-                {
-                    int i2 = i + 1;
-                    if (i2 >= b.PixelWidth) i2 = b.PixelWidth - 1;
-                    int i1 = i - 1;
-                    if (i1 < 0) i1 = 0;
-                    int Dx = pix[(i2 + sess_index_y) * channels + 1] - pix[(i1 + sess_index_y) * channels + 1]; // градиент по x
-                    int Dy = pix[(i + next_index_y) * channels + 1] - pix[(i + prev_index_y) * channels + 1]; // градиент по y
-
-                    //  if (Dx * Dx + Dy * Dy < 0.225)
-                    //  {
-                    //      Dx = 0;
-                    //      Dy = 0;
-                    //  }
-
-                    // Прибавляем на 1 значение в нужном бине гистограммы данной ячейки
-                    // Math.Atan2 возвращает угол из интервала (-PI; PI). Делаем значение из интервала (0; 2*PI), затем приводим к виду (0; 1)
-                    // Чтобы получить номер бина гистограммы, домножим значение из интервала (0; 1) на количество бинов и возьмём целую часть
-
-                    // Второй аргумент - индекс ячейки. Целочисленное деление i / count_pixels_in_cell даёт номер ячейки по x, j / count_pixels_in_cell - по y
-                    // MessageBox.Show(""+ Math.Atan2(Dy, Dx));
-                    // if (Math.Abs(Math.Atan2(Dy, Dx)) < 0.1) MessageBox.Show(Dy + " " + Dx + " " + Math.Atan2(Dy, Dx) + " " + i + " " + j);
-                    int bin = (int)(((double)(Math.Atan2(Dy, Dx) + Math.PI) / (2d * Math.PI)) * count_bins);
-                    if (bin == count_bins) bin--;
-                    cells[bin, i / count_pixels_in_cell + (j / count_pixels_in_cell) * count_cells_x]++;
-                }
-            }
-
-            // Построение гистограммы
-
-            // Всего ячеек в ширину count_cells_x. Каждый блок состоит из count_cells_in_block ячеек
-            // Блоки идут с шагом step_block. Чтобы узнать количество блоков по каждой оси, нужно найти максимальную позицию, которую может занимать блок
-            // (т.к. он имеет заданную ширину и он не может выходить за пределы изображения)
-            int count_blocks_x = (count_cells_x - count_cells_in_block + step_block) / step_block; // количество блоков по x
-            int count_blocks_y = (count_cells_y - count_cells_in_block + step_block) / step_block; // количество блоков по y
-
-            int veclen = count_blocks_x * count_blocks_y; // Всего блоков
-            double[] vec = new double[count_bins * veclen]; // Вектор бинов; double потому что будем нормализовать; На каждый блок по count_bins значений - бины гистограммы
-
-            // Перебираем все блоки и формируем итоговый массив
-            for (int i = 0; i < veclen; i++)
-            {
-                int x_block = (i % count_blocks_x) * step_block; // координата ячейки начала блока x
-                int y_block = (i / count_blocks_x) * step_block; // координата ячейки начала блока y
-                int ind_i = i * count_bins;
-                // Перебираем все ячейки из блока и суммируем данные гистограмм каждой ячейки
-                for (int y = 0; y < count_cells_in_block; y++)
-                {
-                    int ind_y = (y + y_block) * count_cells_x;
-                    for (int x = 0; x < count_cells_in_block; x++)
-                    {
-                        int ind_x = x + x_block;
-                        for (int k = 0; k < count_bins; k++)
-                        {
-                            vec[k + ind_i] += cells[k, ind_x + ind_y];
-                        }
-                    }
-                }
-                // Нормируем вектор
-                double norm = 0.001;
-                for (int k = 0; k < count_bins; k++)
-                {
-                    norm += Math.Abs(vec[k + ind_i]);// *vec[k + ind_i];
-                }
-                //norm = Math.Sqrt(norm);
-                for (int k = 0; k < count_bins; k++)
-                {
-                    vec[k + ind_i] /= norm;
-                    vec[k + ind_i] = Math.Sqrt(vec[k + ind_i]);
-                }
-            }
-            return vec;
-        }
 
         /// <summary>
         /// Изменение значения ячейки
