@@ -6,6 +6,8 @@ using System.IO;
 using libsvm;
 using System.Windows.Media;
 using System;
+using System.Collections.Generic;
+using System.Drawing;
 
 namespace WpfApplication1
 {
@@ -136,7 +138,11 @@ namespace WpfApplication1
             RenderTargetBitmap b = new RenderTargetBitmap((int)m.Width, (int)m.Height, 96, 96, PixelFormats.Pbgra32);
             b.Render(m);
             BitmapImage img = ImageFunctions.FromBitmapSource(b);
-            MessageBox.Show(svm.Recognize(img) + " ");
+            List<System.Drawing.Rectangle> list = svm.RecognizeAll(img);
+            foreach (System.Drawing.Rectangle rect in list)
+            {
+                MessageBox.Show(rect.X + " " + rect.Y + " " + rect.Width + " " + rect.Height);
+            }
         }
     }
 }

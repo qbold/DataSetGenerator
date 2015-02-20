@@ -59,8 +59,6 @@ namespace WpfApplication1
             return HoG(GrayScale(b), b);
         }
 
-        private static int cnt;
-
         /// <summary>
         /// Построение гистограммы ориентированных градиентов
         /// </summary>
@@ -199,7 +197,7 @@ namespace WpfApplication1
         /// Сохранение изображения в формате Jpeg
         /// </summary>
         /// <param name="img"></param>
-        private static void SaveJpeg(BitmapSource s, string filename)
+        public static void SaveJpeg(BitmapSource s, string filename)
         {
             using (FileStream stream = new FileStream(filename, FileMode.Create))
             {
@@ -320,6 +318,97 @@ namespace WpfApplication1
         }
 
         /// <summary>
+        /// Производная по X
+        /// </summary>
+        /// <param name="img"></param>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        /// <returns></returns>
+        private static int DerivativeX(this BitmapImage img, byte[] a, int x, int y)
+        {
+            int t = img.Format.BitsPerPixel / 8;
+            int x1 = Math.Abs(x - 1);
+            int x2 = Math.Abs(x + 1);
+            if (x2 >= img.PixelWidth) x2 = img.PixelWidth - 1;
+            return a[(x2 + y * img.PixelWidth) * t] + a[(x1 + y * img.PixelWidth) * t] - 2 * a[(x + y * img.PixelWidth) * t];
+        }
+
+        /// <summary>
+        /// Производная по Y
+        /// </summary>
+        /// <param name="img"></param>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        /// <returns></returns>
+        private static int DerivativeY(this BitmapImage img, byte[] a, int x, int y)
+        {
+            int t = img.Format.BitsPerPixel / 8;
+            int y1 = Math.Abs(y - 1);
+            int y2 = Math.Abs(y + 1);
+            if (y2 >= img.PixelHeight) y2 = img.PixelHeight - 1;
+            return a[(x + y2 * img.PixelWidth) * t] + a[(x + y1 * img.PixelWidth) * t] - 2 * a[(x + y * img.PixelWidth) * t];
+        }
+
+        /// <summary>
+        /// Производная по XY
+        /// </summary>
+        /// <param name="img"></param>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        /// <returns></returns>
+        private static int DerivativeXY(this BitmapImage img, byte[] a, int x, int y)
+        {
+            int t = img.Format.BitsPerPixel / 8;
+            int x1 = Math.Abs(x - 1);
+            int y1 = Math.Abs(y - 1);
+            int x2 = Math.Abs(x + 1);
+            if (x2 >= img.PixelWidth) x2 = img.PixelWidth - 1;
+            int y2 = Math.Abs(y + 1);
+            if (y2 >= img.PixelHeight) y2 = img.PixelHeight - 1;
+            return a[(x2 + y2 * img.PixelWidth) * t] + a[(x1 + y1 * img.PixelWidth) * t] - 2 * a[(x + y * img.PixelWidth) * t];
+        }
+
+        /// <summary>
+        /// Детектор Харриса
+        /// </summary>
+        /// <param name="img"></param>
+        /// <returns></returns>
+        public static List<CPoint> Harris(this BitmapImage img)
+        {
+            List<CPoint> l = new List<CPoint>();
+            byte[] pix = img.GrayScale();
+            //MessageBox.Show(img.PixelWidth + " " + img.PixelHeight);
+            for (int x = 0; x < img.PixelWidth; x++)
+            {
+                for (int y = 0; y < img.PixelHeight; y++)
+                {
+                    int Ix = img.DerivativeX(pix, x, y);
+                    int Iy = img.DerivativeY(pix, x, y);
+                    int Ixy = img.DerivativeXY(pix, x, y);
+                    Ix *= Ix;
+                    Iy *= Iy;
+                    double Mc = Ix * Iy - Ixy * Ixy - 0.03 * (Ix + Iy) * (Ix + Iy);
+                    // if (Ix > 0)
+                    //   MessageBox.Show(Ix + " " + Iy + " " + Ixy);
+                    //  if (Mc > 150)
+                    //   {
+                    CPoint c = null;
+                    if ((c = l.Find(a => Math.Sqrt((x - a.X) * (x - a.X) + (y - a.Y) * (y - a.Y)) < 15)) == null)
+                        l.Add(new CPoint(x, y, Mc));
+                   // else if (c != null && c.Mc < Mc)
+                   // {
+                       // l.Remove(c);
+                       // l.Add(new CPoint(x, y, Mc));
+                   // }
+
+                    //  }
+                }
+            }
+            MessageBox.Show("ф" + l.Count);
+            return l;
+        }
+
+        /// <summary>
         /// Генерирует следующий массив HoG
         /// </summary>
         /// <param name="img"></param>
@@ -328,6 +417,7 @@ namespace WpfApplication1
         {
             if (!img.HasNext()) throw new Exception("You should call StartTransforms to begin generating transforms.");
 
+            double KRAT = 0.2;
             TransformsState state = data[img];
             int all = state.index_transform;
             int index_scale = all % state.count_scales;
@@ -340,14 +430,12 @@ namespace WpfApplication1
             all /= state.count_rotates;
             int index_blur = all % state.count_blurs;
 
-            double scale = 1d + 0.5d * index_scale / (double)state.count_scales;
+            double scale = 1d + KRAT * index_scale / (double)state.count_scales;
             double offset_x = img.PixelWidth * (scale - 1) * (double)index_shift_x / (double)state.count_shifts;
             double offset_y = img.PixelHeight * (scale - 1) * (double)index_shift_y / (double)state.count_shifts;
 
             double center_x = (offset_x + img.PixelWidth / 2) / scale;
             double center_y = (offset_y + img.PixelHeight / 2) / scale;
-
-            // MessageBox.Show(index_blur + " ");
 
             BitmapImage blurred = Gauss(state.pix, img, index_blur);
             TransformedBitmap img3 = new TransformedBitmap(blurred, new RotateTransform(360d * index_rotate / state.count_rotates, img.PixelWidth / 2, img.PixelHeight / 2));
@@ -371,6 +459,22 @@ namespace WpfApplication1
             public byte[] pix; // массив пикселей grayscale изображения
             public int index_transform; // индекс текущего преобразования
             public int count_scales, count_shifts, count_rotates, count_blurs, count; // количество масштабирований, смещений; общее кол-во
+        }
+
+        /// <summary>
+        /// Характеристическая точка
+        /// </summary>
+        public class CPoint
+        {
+            public int X, Y;
+            public double Mc;
+
+            public CPoint(int x, int y, double Mc)
+            {
+                this.X = x;
+                this.Y = y;
+                this.Mc = Mc;
+            }
         }
     }
 }

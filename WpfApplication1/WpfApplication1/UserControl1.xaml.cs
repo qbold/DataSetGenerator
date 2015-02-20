@@ -6,6 +6,7 @@ using System;
 using System.Windows.Media.Imaging;
 using System.Collections.Generic;
 using libsvm;
+using System.Windows.Controls.Primitives;
 
 namespace WpfApplication1
 {
@@ -332,6 +333,26 @@ namespace WpfApplication1
         private void grid_CurrentCellChanged(object sender, DataGridCellEditEndingEventArgs e)
         {
             MainWindow.window.Change(this);
+        }
+
+        /// <summary>
+        /// Выделение колонки
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void columnHeader_Click(object sender, RoutedEventArgs e)
+        {
+            var columnHeader = sender as DataGridColumnHeader;
+           // MessageBox.Show("sa");
+            if (columnHeader != null)
+            {
+               // MessageBox.Show("sa2");
+                grid.SelectedCells.Clear();
+                foreach (var item in grid.Items)
+                {
+                    grid.SelectedCells.Add(new DataGridCellInfo(item, columnHeader.Column));
+                }
+            }
         }
     }
 }

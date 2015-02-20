@@ -30,7 +30,7 @@ namespace WpfApplication1
         private void Button_Click(object sender, RoutedEventArgs e)
         {
             string s = textBox.Text.Trim();
-            if (s.Length > 3)
+            if (s.Length > 4)
             {
                 MessageBox.Show("Введите в поле число длины не более 3 символов.");
                 return;
