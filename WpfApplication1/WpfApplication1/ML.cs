@@ -3,6 +3,8 @@ using libsvm;
 using System.Reflection;
 using System.Windows.Media.Imaging;
 using System.Drawing;
+using System.Threading.Tasks;
+using System.Collections.Concurrent;
 
 namespace WpfApplication1
 {
@@ -12,14 +14,25 @@ namespace WpfApplication1
     public static class ML
     {
         /// <summary>
+        /// Оптимизаторы
+        /// </summary>
+        private static Dictionary<SVM, AdaptivePriorityOptimizer> opt;
+
+        static ML()
+        {
+            opt = new Dictionary<SVM, AdaptivePriorityOptimizer>();
+        }
+
+        /// <summary>
         /// Возвращает модель обученного SVM
         /// </summary>
         /// <returns></returns>
         public static SVM getSVMObject(List<List<double>> set)
         {
             var v = ProblemHelper.ReadProblem(set);
-            var svm = new C_SVC(v, KernelHelper.RadialBasisFunctionKernel(0.5), 1, 100, true);//RadialBasisFunctionKernel(0.5)
+            var svm = new C_SVC(v, KernelHelper.RadialBasisFunctionKernel(0.5), 1);//RadialBasisFunctionKernel(0.5)
             //svm_model model = (svm_model)(typeof(SVM).GetField("model", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(svm));
+            opt.Add(svm, new AdaptivePriorityOptimizer());
             return svm;
         }
 
@@ -47,7 +60,7 @@ namespace WpfApplication1
         public static svm_model getSVM(List<List<double>> set)
         {
             var v = ProblemHelper.ReadProblem(set);
-            var svm = new C_SVC(v, KernelHelper.RadialBasisFunctionKernel(0.5), 1, 100, true);//RadialBasisFunctionKernel(0.5)
+            var svm = new C_SVC(v, KernelHelper.RadialBasisFunctionKernel(0.5), 1);//RadialBasisFunctionKernel(0.5)
             svm_model model = (svm_model)(typeof(SVM).GetField("model", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(svm));
             return model;
         }
@@ -59,7 +72,9 @@ namespace WpfApplication1
         /// <returns></returns>
         public static SVM getSVMObject(string file)
         {
-            return new C_SVC(file);
+            var svm = new C_SVC(file);
+            opt.Add(svm, new AdaptivePriorityOptimizer());
+            return svm;
         }
 
         /// <summary>
@@ -120,6 +135,8 @@ namespace WpfApplication1
             return l;
         }
 
+        //  private static bool is_end;
+
         /// <summary>
         /// Распознать изображение BitmapImage
         /// </summary>
@@ -130,40 +147,67 @@ namespace WpfApplication1
         {
             int max_size = 1;
             List<Rectangle> l = new List<Rectangle>();
+            double e = ImageFunctions.CurrentTimeMillis();
+            img = ImageFunctions.Gauss(img.GrayScale(), img, 1);
+            System.Windows.MessageBox.Show("Tm: " + (ImageFunctions.CurrentTimeMillis() - e));
+
             List<ImageFunctions.CPoint> h = img.Harris();
-            // h.Add(new ImageFunctions.CPoint(0, 0, 1));
-            // h.Add(new ImageFunctions.CPoint(img.PixelWidth - 1, img.PixelHeight - 1, 1));
+
+            AdaptivePriorityOptimizer optimizer = opt[svm];
+
             int num = 0;
             foreach (ImageFunctions.CPoint p in h)
             {
-                if (l.Count >= max_size) break;
                 foreach (ImageFunctions.CPoint p2 in h)
                 {
-                    if (l.Count >= max_size) break;
                     if (p == p2) continue;
-                    if (p2.X > p.X + 10 && p2.Y > p.Y + 10)
+                    if (p2.X > p.X && p2.Y > p.Y)
                     {
-                        // System.Windows.MessageBox.Show("1. " + p.X + " " + p.Y + " " + p2.X + " " + p2.Y);
-                        // if (!l.Exists(a => a.X + a.Width >= p.X && a.Y + a.Height >= p.Y && a.X <= p2.X && a.Y <= p2.Y))
-                        // {
-                        // System.Windows.MessageBox.Show("2. NULL");
-                        CroppedBitmap b = new CroppedBitmap(img, new System.Windows.Int32Rect(p.X, p.Y, p2.X - p.X, p2.Y - p.Y));
-                        BitmapImage ig = ImageFunctions.FromBitmapSource(b);
-
-                        //ImageFunctions.SaveJpeg(ig, "a/" + num++ + ".jpg");
-                        num++;
-
-                        if (svm.Predict(ML.GetNodes(ig.HoG())) > 0.7)
-                        {
-                            System.Windows.MessageBox.Show("3. PREDICT " + (num - 1));
-                            l.Add(new Rectangle(p.X, p.Y, p2.X - p.X, p2.Y - p.Y));
-                            ImageFunctions.SaveJpeg(ig, "a/" + num + ".jpg");
-                        }
-                        // }
+                        optimizer.AddPoint(p, p2);
                     }
                 }
             }
-            System.Windows.MessageBox.Show("Cnt: " + num);
+
+            // is_end = false;
+
+            double s = ImageFunctions.CurrentTimeMillis();
+            double sum_images = 0, sum_points = 0, sum_predict = 0;
+
+            //img.Freeze();
+
+            while (!optimizer.Empty() && !is_end)
+            {
+                if (l.Count >= max_size) break;
+                ImageFunctions.CPoint p, p2;
+
+                double s1 = ImageFunctions.CurrentTimeMillis();
+                optimizer.GetPoints(out p, out p2);
+                sum_points += ImageFunctions.CurrentTimeMillis() - s1;
+
+                System.Windows.Int32Rect int2 = new System.Windows.Int32Rect(p.X, p.Y, p2.X - p.X, p2.Y - p.Y);
+
+                s1 = ImageFunctions.CurrentTimeMillis();
+                CroppedBitmap b = new CroppedBitmap(img, int2);
+                BitmapImage ig = ImageFunctions.FromBitmapSource(b);
+                double[] hf = ig.HoG();
+                sum_images += ImageFunctions.CurrentTimeMillis() - s1;
+
+                num++;
+                double d;
+                s1 = ImageFunctions.CurrentTimeMillis();
+                if ((d = svm.Predict(ML.GetNodes(hf))) > 0)
+                {
+                    sum_predict += ImageFunctions.CurrentTimeMillis() - s1;
+                    l.Add(new Rectangle(p.X, p.Y, p2.X - p.X, p2.Y - p.Y));
+                    optimizer.AddCorrect(p.Color, p2.Color, p2.X - p.X, p2.Y - p.Y);
+
+                    // is_end = true;
+
+                    ImageFunctions.SaveJpeg(ig, "a/" + num + ".jpg");
+                }
+            }
+
+            System.Windows.MessageBox.Show("Cnt: " + num + " Time: " + (ImageFunctions.CurrentTimeMillis() - s) + " Images: " + sum_images + " Predict: " + sum_predict + " Points: " + sum_points);
             return l;
         }
     }

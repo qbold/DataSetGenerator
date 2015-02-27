@@ -7,7 +7,6 @@ using libsvm;
 using System.Windows.Media;
 using System;
 using System.Collections.Generic;
-using System.Drawing;
 
 namespace WpfApplication1
 {

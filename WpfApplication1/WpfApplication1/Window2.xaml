@@ -11,6 +11,10 @@
                 <MenuItem Header="Export" Click="exp"/>
             </MenuItem>
         </Menu>
-        <MediaElement x:Name="m" Height="249" VerticalAlignment="Top" Width="293"/>
+        <Grid>
+        	<MediaElement x:Name="m" Height="249" VerticalAlignment="Top" Width="293"/>
+			<Canvas x:Name="canvas" Background="Transparent">
+			</Canvas>
+		</Grid>
     </DockPanel>
 </Window>

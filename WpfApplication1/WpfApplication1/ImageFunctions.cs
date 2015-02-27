@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
@@ -12,12 +14,20 @@ namespace WpfApplication1
     /// </summary>
     public static class ImageFunctions
     {
+        public static int ImageWidth { set; get; }
+        public static int ImageHeight { set; get; }
 
         private static Dictionary<BitmapImage, TransformsState> data; // Хранит данные о количестве сгенерированных трансформаций
+
+        private static byte[] computed_colors_hog;
+        private static int[,] computed_cells;
+        private static BitmapImage computed_image;
 
         static ImageFunctions()
         {
             data = new Dictionary<BitmapImage, TransformsState>();
+            ImageWidth = 176;
+            ImageHeight = 144;
         }
 
         /// <summary>
@@ -35,16 +45,16 @@ namespace WpfApplication1
             // Вычисляем grayscale
             for (int i = 1 - 1; i < pix.Length; i += channels)
             {
-                try
-                {
-                    pix[i] = (byte)(0.299 * pix[i] + 0.587 * pix[i + 1] + 0.114 * pix[i + 2]);
-                    pix[i + 1] = pix[i];
-                    pix[i + 2] = pix[i];
-                }
-                catch (Exception e)
-                {
-                    MessageBox.Show("Error" + channels);
-                }
+                //   try
+                //   {
+                pix[i] = (byte)(0.299 * pix[i] + 0.587 * pix[i + 1] + 0.114 * pix[i + 2]);
+                // pix[i + 1] = pix[i];
+                // pix[i + 2] = pix[i];
+                //  }
+                //  catch (Exception e)
+                //  {
+                //      MessageBox.Show("Error" + channels);
+                //  }
             }
             return pix;
         }
@@ -56,15 +66,36 @@ namespace WpfApplication1
         /// <returns></returns>
         public static double[] HoG(this BitmapImage b)
         {
-            return HoG(GrayScale(b), b);
+            HoG(GrayScale(b), b);
+            return GetHistogram(b, 0, 0, b.PixelWidth, b.PixelHeight);
         }
 
         /// <summary>
-        /// Построение гистограммы ориентированных градиентов
+        /// Генерация HoG для заданного окна
+        /// </summary>
+        /// <param name="b"></param>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        /// <param name="w"></param>
+        /// <param name="h"></param>
+        /// <returns></returns>
+        public static double[] HoG(this BitmapImage b, int x, int y, int w, int h)
+        {
+            if (b != computed_image)
+            {
+                computed_image = b;
+                computed_image.HoG();
+            }
+
+            return GetHistogram(b, x, y, w, h);
+        }
+
+        /// <summary>
+        /// Вычисление значений computed_cells и computed_colors
         /// </summary>
         /// <param name="pix"></param>
         /// <returns></returns>
-        private static double[] HoG(byte[] pix, BitmapImage b)
+        private static void HoG(byte[] pix, BitmapImage b)
         {
             int w = b.PixelWidth;
             int h = b.PixelHeight;
@@ -82,53 +113,94 @@ namespace WpfApplication1
 
             byte[] pix2 = new byte[pix.Length];
 
-            int[,] cells = new int[count_bins, count_cells_x * count_cells_y]; // массив, в котором будут храниться гистограммы для каждой ячейки
-            for (int j = 0; j < h; j++)
+            // int[,] cells = new int[count_bins, count_cells_x * count_cells_y]; // массив, в котором будут храниться гистограммы для каждой ячейки
+
+            Parallel.ForEach(Partitioner.Create(0, h), a =>
             {
-                int sess_index_y = j * w;
-                int next_index_y = (j + 1 >= h ? j : j + 1) * w;
-                int prev_index_y = (j - 1 <= 0 ? 0 : j - 1) * w;
-                for (int i = 0; i < w; i++)
+                for (int j = a.Item1; j < a.Item2; j++)
                 {
-                    int i2 = i + 1;
-                    if (i2 >= w) i2 = w - 1;
-                    int i1 = i - 1;
-                    if (i1 < 0) i1 = 0;
-                    int Dx = pix[(i2 + sess_index_y) * channels + 1 - 1] - pix[(i1 + sess_index_y) * channels + 1 - 1]; // градиент по x
-                    int Dy = pix[(i + next_index_y) * channels + 1 - 1] - pix[(i + prev_index_y) * channels + 1 - 1]; // градиент по y
+                    int sess_index_y = j * w;
+                    int next_index_y = (j + 1 >= h ? j : j + 1) * w;
+                    int prev_index_y = (j - 1 <= 0 ? 0 : j - 1) * w;
+                    for (int i = 0; i < w; i++)
+                    {
+                        int i2 = i + 1;
+                        if (i2 >= w) i2 = w - 1;
+                        int i1 = i - 1;
+                        if (i1 < 0) i1 = 0;
+                        int Dx = pix[(i2 + sess_index_y) * channels + 1 - 1] - pix[(i1 + sess_index_y) * channels + 1 - 1]; // градиент по x
+                        int Dy = pix[(i + next_index_y) * channels + 1 - 1] - pix[(i + prev_index_y) * channels + 1 - 1]; // градиент по y
 
-                    Dx *= Dx;
-                    Dy *= Dy;
+                        Dx *= Dx;
+                        Dy *= Dy;
 
-                    //  if (Dx * Dx + Dy * Dy < 0.225)
-                    //  {
-                    //      Dx = 0;
-                    //      Dy = 0;
-                    //  }
+                        //  if (Dx * Dx + Dy * Dy < 0.225)
+                        //  {
+                        //      Dx = 0;
+                        //      Dy = 0;
+                        //  }
 
-                    // Прибавляем на 1 значение в нужном бине гистограммы данной ячейки
-                    // Math.Atan2 возвращает угол из интервала (-PI; PI). Делаем значение из интервала (0; 2*PI), затем приводим к виду (0; 1)
-                    // Чтобы получить номер бина гистограммы, домножим значение из интервала (0; 1) на количество бинов и возьмём целую часть
+                        // Прибавляем на 1 значение в нужном бине гистограммы данной ячейки
+                        // Math.Atan2 возвращает угол из интервала (-PI; PI). Делаем значение из интервала (0; 2*PI), затем приводим к виду (0; 1)
+                        // Чтобы получить номер бина гистограммы, домножим значение из интервала (0; 1) на количество бинов и возьмём целую часть
 
-                    // Второй аргумент - индекс ячейки. Целочисленное деление i / count_pixels_in_cell даёт номер ячейки по x, j / count_pixels_in_cell - по y
-                    // MessageBox.Show(""+ Math.Atan2(Dy, Dx));
-                    // if (Math.Abs(Math.Atan2(Dy, Dx)) < 0.1) MessageBox.Show(Dy + " " + Dx + " " + Math.Atan2(Dy, Dx) + " " + i + " " + j);
-                    int bin = (int)(((double)(Math.Atan2(Dy, Dx) + Math.PI) / (2d * Math.PI)) * count_bins);
-                    // if (bin == count_bins) 
-                    bin--;
+                        // Второй аргумент - индекс ячейки. Целочисленное деление i / count_pixels_in_cell даёт номер ячейки по x, j / count_pixels_in_cell - по y
+                        // MessageBox.Show(""+ Math.Atan2(Dy, Dx));
+                        // if (Math.Abs(Math.Atan2(Dy, Dx)) < 0.1) MessageBox.Show(Dy + " " + Dx + " " + Math.Atan2(Dy, Dx) + " " + i + " " + j);
+                        int bin = (int)(((double)(Math.Atan2(Dy, Dx) + Math.PI) / (2d * Math.PI)) * count_bins);
+                        // if (bin == count_bins) 
+                        bin--;
 
-                    int px = (i + sess_index_y) * channels;
-                    pix2[px] = (byte)(bin * 256d / count_bins);
-                    pix2[px + 1] = pix2[px];
-                    pix2[px + 2] = pix2[px];
-                    pix2[px + 3] = 255;
+                        int px = (i + sess_index_y) * channels;
+                        pix2[px] = (byte)bin;//(byte)(bin * 256d / count_bins);
+                        // pix2[px + 1] = pix2[px];
+                        // pix2[px + 2] = pix2[px];
+                        // pix2[px + 3] = 255;
 
-                    cells[bin, i / count_pixels_in_cell + (j / count_pixels_in_cell) * count_cells_x]++;
+                        //  cells[bin, i / count_pixels_in_cell + (j / count_pixels_in_cell) * count_cells_x]++;
+                    }
                 }
-            }
+            });
+            // computed_cells = cells;
+            computed_colors_hog = pix2;
+        }
 
-            //SaveJpeg(pix2, w, h, channels * b.PixelWidth, "1/filename" + cnt++ + ".jpg");
-            //MessageBox.Show("e");
+        private static double[] GetHistogram(BitmapImage b, int x2, int y2, int w2, int h2)
+        {
+            int w = b.PixelWidth;
+            int h = b.PixelHeight;
+
+            int channels = b.Format.BitsPerPixel / 8;
+
+            float count_pixels_in_cell_x = (float)w2 / 22f;//8;
+            float count_pixels_in_cell_y = (float)h2 / 18f;//8;
+            int count_cells_in_block = 4;
+            int step_block = 2;
+            int count_bins = 8;
+
+            // Вычисляем направления (углы) градиента изображения и записываем в массив гистограмму по ячейке
+            int count_cells_x = 22;//w / count_pixels_in_cell_x; // количество ячеек по x
+            int count_cells_y = 18;// h / count_pixels_in_cell_y; // количество ячеек по y
+
+            int[,] cells = new int[count_bins, count_cells_x * count_cells_y]; // массив, в котором будут храниться гистограммы для каждой ячейки
+
+            Parallel.ForEach(Partitioner.Create(0, h2), a =>
+            {
+                for (int j = a.Item1; j < a.Item2; j++)
+                {
+                    int j2 = j + y2;
+                    int sess_index_y = j2 * w;
+                    int next_index_y = (j2 + 1 >= h ? j2 : j2 + 1) * w;
+                    int prev_index_y = (j2 - 1 <= 0 ? 0 : j2 - 1) * w;
+                    for (int i = 0; i < w2; i++)
+                    {
+                        int i2 = i + x2;
+                        int px = (i2 + sess_index_y) * channels;
+                        cells[computed_colors_hog[px], (int)(i / count_pixels_in_cell_x) + (int)(j / count_pixels_in_cell_y) * count_cells_x]++;
+                    }
+                }
+            });
+
 
             // Построение гистограммы
 
@@ -142,37 +214,41 @@ namespace WpfApplication1
             double[] vec = new double[count_bins * veclen]; // Вектор бинов; double потому что будем нормализовать; На каждый блок по count_bins значений - бины гистограммы
 
             // Перебираем все блоки и формируем итоговый массив
-            for (int i = 0; i < veclen; i++)
+            Parallel.ForEach(Partitioner.Create(0, veclen), a =>
             {
-                int x_block = (i % count_blocks_x) * step_block; // координата ячейки начала блока x
-                int y_block = (i / count_blocks_x) * step_block; // координата ячейки начала блока y
-                int ind_i = i * count_bins;
-                // Перебираем все ячейки из блока и суммируем данные гистограмм каждой ячейки
-                for (int y = 0; y < count_cells_in_block; y++)
+                for (int i = a.Item1; i < a.Item2; i++)
                 {
-                    int ind_y = (y + y_block) * count_cells_x;
-                    for (int x = 0; x < count_cells_in_block; x++)
+                    int x_block = (i % count_blocks_x) * step_block; // координата ячейки начала блока x
+                    int y_block = (i / count_blocks_x) * step_block; // координата ячейки начала блока y
+                    int ind_i = i * count_bins;
+                    // Перебираем все ячейки из блока и суммируем данные гистограмм каждой ячейки
+                    for (int y = 0; y < count_cells_in_block; y++)
                     {
-                        int ind_x = x + x_block;
-                        for (int k = 0; k < count_bins; k++)
+                        int ind_y = (y + y_block) * count_cells_x;
+                        for (int x = 0; x < count_cells_in_block; x++)
                         {
-                            vec[k + ind_i] += cells[k, ind_x + ind_y];
+                            int ind_x = x + x_block;
+                            for (int k = 0; k < count_bins; k++)
+                            {
+                                vec[k + ind_i] += cells[k, ind_x + ind_y];
+                            }
                         }
                     }
+                    // Нормируем вектор
+                    double norm = 0.001;
+                    for (int k = 0; k < count_bins; k++)
+                    {
+                        norm += Math.Abs(vec[k + ind_i]);// *vec[k + ind_i];
+                    }
+                    //norm = Math.Sqrt(norm);
+                    for (int k = 0; k < count_bins; k++)
+                    {
+                        vec[k + ind_i] /= norm;
+                        vec[k + ind_i] = Math.Sqrt(vec[k + ind_i]);
+                    }
                 }
-                // Нормируем вектор
-                double norm = 0.001;
-                for (int k = 0; k < count_bins; k++)
-                {
-                    norm += Math.Abs(vec[k + ind_i]);// *vec[k + ind_i];
-                }
-                //norm = Math.Sqrt(norm);
-                for (int k = 0; k < count_bins; k++)
-                {
-                    vec[k + ind_i] /= norm;
-                    vec[k + ind_i] = Math.Sqrt(vec[k + ind_i]);
-                }
-            }
+            });
+
             return vec;
         }
 
@@ -212,54 +288,63 @@ namespace WpfApplication1
         /// </summary>
         /// <param name="img"></param>
         /// <returns></returns>
-        private static BitmapImage Gauss(byte[] img, BitmapImage im, int k)
+        public static BitmapImage Gauss(byte[] img, BitmapImage im, int k)
         {
             if (k == 0) return im;
             byte[] outp = new byte[img.Length];
+            int w = im.PixelWidth;
+            int h = im.PixelHeight;
 
             double[] GAUSS = { 0.028, 0.23, 0.47, 0.23, 0.028 };
-            for (int x = 0; x < im.PixelWidth; x++)
+
+            Parallel.ForEach(Partitioner.Create(0, im.PixelWidth), a =>
             {
-                for (int y = 0; y < im.PixelHeight; y++)
+                for (int x = a.Item1; x < a.Item2; x++)
                 {
-                    double red = 0;
-                    for (int k1 = 0; k1 < GAUSS.Length; k1++)
+                    for (int y = 0; y < h; y++)
                     {
-                        int x_r = k1 - GAUSS.Length / 2 + x;
-                        if (x_r < 0) x_r = 0;
-                        if (x_r >= im.PixelWidth) x_r = im.PixelWidth - 1;
-                        red += GAUSS[k1] * img[(x_r + y * im.PixelWidth) * 4];
+                        double red = 0;
+                        for (int k1 = 0; k1 < GAUSS.Length; k1++)
+                        {
+                            int x_r = k1 - GAUSS.Length / 2 + x;
+                            if (x_r < 0) x_r = 0;
+                            if (x_r >= w) x_r = w - 1;
+                            red += GAUSS[k1] * img[(x_r + y * w) * 4];
+                        }
+                        int index = (x + y * w) * 4;
+                        if (red > 255) red = 255;
+                        if (red < 0) red = 0;
+                        outp[index] = (byte)red;
+                        outp[index + 1] = outp[index];
+                        outp[index + 2] = outp[index];
+                        outp[index + 3] = 255;
                     }
-                    int index = (x + y * im.PixelWidth) * 4;
-                    if (red > 255) red = 255;
-                    if (red < 0) red = 0;
-                    outp[index] = (byte)red;
-                    outp[index + 1] = outp[index];
-                    outp[index + 2] = outp[index];
-                    outp[index + 3] = 255;
                 }
-            }
-            for (int x = 0; x < im.PixelWidth; x++)
+            });
+            Parallel.ForEach(Partitioner.Create(0, im.PixelWidth), a =>
             {
-                for (int y = 0; y < im.PixelHeight; y++)
+                for (int x = a.Item1; x < a.Item2; x++)
                 {
-                    double red = 0;
-                    for (int k1 = 0; k1 < GAUSS.Length; k1++)
+                    for (int y = 0; y < h; y++)
                     {
-                        int x_r = k1 - GAUSS.Length / 2 + y;
-                        if (x_r < 0) x_r = 0;
-                        if (x_r >= im.PixelHeight) x_r = im.PixelHeight - 1;
-                        red += GAUSS[k1] * img[(x + x_r * im.PixelWidth) * 4];
+                        double red = 0;
+                        for (int k1 = 0; k1 < GAUSS.Length; k1++)
+                        {
+                            int x_r = k1 - GAUSS.Length / 2 + y;
+                            if (x_r < 0) x_r = 0;
+                            if (x_r >= h) x_r = h - 1;
+                            red += GAUSS[k1] * img[(x + x_r * w) * 4];
+                        }
+                        int index = (x + y * w) * 4;
+                        if (red > 255) red = 255;
+                        if (red < 0) red = 0;
+                        outp[index] = (byte)red;
+                        outp[index + 1] = outp[index];
+                        outp[index + 2] = outp[index];
+                        outp[index + 3] = 255;
                     }
-                    int index = (x + y * im.PixelWidth) * 4;
-                    if (red > 255) red = 255;
-                    if (red < 0) red = 0;
-                    outp[index] = (byte)red;
-                    outp[index + 1] = outp[index];
-                    outp[index + 2] = outp[index];
-                    outp[index + 3] = 255;
                 }
-            }
+            });
 
             if (k > 0) return Gauss(outp, im, k - 1);
             else
@@ -375,8 +460,9 @@ namespace WpfApplication1
         /// <returns></returns>
         public static List<CPoint> Harris(this BitmapImage img)
         {
-            List<CPoint> l = new List<CPoint>();
+            List<CPoint> l = new List<CPoint>(1024);
             byte[] pix = img.GrayScale();
+            double lng = CurrentTimeMillis();
             //MessageBox.Show(img.PixelWidth + " " + img.PixelHeight);
             for (int x = 0; x < img.PixelWidth; x++)
             {
@@ -387,24 +473,28 @@ namespace WpfApplication1
                     int Ixy = img.DerivativeXY(pix, x, y);
                     Ix *= Ix;
                     Iy *= Iy;
-                    double Mc = Ix * Iy - Ixy * Ixy - 0.03 * (Ix + Iy) * (Ix + Iy);
+                    double Mc = Ix * Iy - Ixy * Ixy - 0.06 * (Ix + Iy) * (Ix + Iy);
                     // if (Ix > 0)
                     //   MessageBox.Show(Ix + " " + Iy + " " + Ixy);
-                    //  if (Mc > 150)
-                    //   {
-                    CPoint c = null;
-                    if ((c = l.Find(a => Math.Sqrt((x - a.X) * (x - a.X) + (y - a.Y) * (y - a.Y)) < 15)) == null)
-                        l.Add(new CPoint(x, y, Mc));
-                   // else if (c != null && c.Mc < Mc)
-                   // {
-                       // l.Remove(c);
-                       // l.Add(new CPoint(x, y, Mc));
-                   // }
-
-                    //  }
+                    if (Mc > 150)
+                    {
+                        CPoint c = null;
+                        if ((c = l.Find(a => /*Math.Sqrt((x - a.X) * (x - a.X) + (y - a.Y) * (y - a.Y)) < 9*/Math.Abs(x - a.X) < 15 && Math.Abs(y - a.Y) < 15)) == null)
+                            l.Add(new CPoint(x, y, Mc));
+                        else if (c != null && c.Mc < Mc)
+                        {
+                            c.X += x;
+                            c.X /= 2;
+                            c.Y += y;
+                            c.Y /= 2;
+                            c.Mc += Mc;
+                            c.Mc /= 2;
+                            // l.Add(new CPoint(x, y, Mc));
+                        }
+                    }
                 }
             }
-            MessageBox.Show("ф" + l.Count);
+            MessageBox.Show("Corners: " + l.Count + " Milliseconds: " + (CurrentTimeMillis() - lng));
             return l;
         }
 
@@ -445,9 +535,19 @@ namespace WpfApplication1
             // SaveJpeg(source, "1/" + state.index_transform + ".jpg");
             BitmapImage img2 = FromBitmapSource(source);
 
-            double[] d = HoG(img2.GrayScale(), img2);
+            img2.HoG();
+            double[] d = GetHistogram(img2, 0, 0, img2.PixelWidth, img2.PixelHeight);
             if (++state.index_transform >= state.count) data.Remove(img);
             return d;
+        }
+
+        /// <summary>
+        /// Получить время в мс
+        /// </summary>
+        /// <returns></returns>
+        public static double CurrentTimeMillis()
+        {
+            return (DateTime.UtcNow - new DateTime(1970, 1, 1)).TotalMilliseconds;
         }
 
         /// <summary>
@@ -468,12 +568,16 @@ namespace WpfApplication1
         {
             public int X, Y;
             public double Mc;
+            public int Color;
 
             public CPoint(int x, int y, double Mc)
             {
                 this.X = x;
                 this.Y = y;
                 this.Mc = Mc;
+                Color = (int)Mc;
+                if (Color < 0) Color = 0;
+                if (Color > 255) Color = 255;
             }
         }
     }

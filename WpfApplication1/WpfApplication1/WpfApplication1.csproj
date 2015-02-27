@@ -150,8 +150,10 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="AdaptivePriorityOptimizer.cs" />
     <Compile Include="ImageFunctions.cs" />
     <Compile Include="ML.cs" />
+    <Compile Include="PriorityQueue.cs" />
     <Compile Include="RowNumber.xaml.cs">
       <DependentUpon>RowNumber.xaml</DependentUpon>
     </Compile>
@@ -212,6 +214,7 @@
       <SubType>Code</SubType>
     </Compile>
     <AppDesigner Include="Properties\" />
+    <None Include="app.config" />
     <None Include="Application.ico">
       <Visible>false</Visible>
     </None>
