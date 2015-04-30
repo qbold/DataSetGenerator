@@ -1,0 +1,50 @@
+﻿<Window x:Class="WpfApplication1.Window3"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Настройки HoG" Height="478.59" Width="345" Loaded="Window_Loaded" ResizeMode="NoResize">
+    <Grid Margin="0,0,2,-1">
+        <Label x:Name="label01" Content="Всего изображений:" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="49,386,0,0"/>
+        <Button Content="Генерировать" HorizontalAlignment="Left" VerticalAlignment="Top" Width="104" Margin="116,418,0,0" Click="Button_Click"/>
+        <Slider x:Name="slider1" HorizontalAlignment="Left" Margin="150,17,0,0" VerticalAlignment="Top" Width="120" ValueChanged="Slider_ValueChanged" StylusMove="Slider_ValueChanged" SmallChange="1" Minimum="1" Maximum="50"/>
+        <Label Content="Изменений размера" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="22,13,0,0"/>
+        <Label Content="Вращений" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="22,135,0,0"/>
+        <Label Content="Смещений" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="22,180,0,0"/>
+        <Slider x:Name="slider2" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="150,139,0,0" Width="120" Minimum="1" SmallChange="1" ValueChanged="Slider_ValueChanged" StylusMove="Slider_ValueChanged" Maximum="50" AutoToolTipPlacement="BottomRight" IsManipulationEnabled="True"/>
+        <Slider x:Name="slider3" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="150,184,0,0" Width="120" Minimum="1" SmallChange="1" StylusMove="Slider_ValueChanged" ValueChanged="Slider_ValueChanged" Maximum="50"/>
+        <Label Content="Размытий" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="22,222,0,0"/>
+        <Slider x:Name="slider4" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="150,226,0,0" Width="120" Minimum="1" SmallChange="1" StylusMove="Slider_ValueChanged" ValueChanged="Slider_ValueChanged" Maximum="50"/>
+        <TextBox x:Name="max_01" HorizontalAlignment="Left" Height="23" TextWrapping="Wrap" Text="1,2" VerticalAlignment="Top" Width="120" Margin="150,57,0,0"/>
+        <Label Content="Макс. увеличение" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="22,54,0,0"/>
+        <Label x:Name="l1" Content="0" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="287,13,0,0"/>
+        <Label x:Name="l3" Content="0" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="287,135,0,0"/>
+        <Label x:Name="l4" Content="0" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="287,180,0,0"/>
+        <Label x:Name="l5" Content="0" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="287,222,0,0"/>
+        <Label Content="Угол вращения: от" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="22,96,0,0"/>
+        <TextBox x:Name="from_box" HorizontalAlignment="Left" Height="23" TextWrapping="Wrap" VerticalAlignment="Top" Width="61" Margin="149,97,0,0" Text="0"/>
+        <Label Content="до" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="215,96,0,0"/>
+        <TextBox x:Name="to_box" HorizontalAlignment="Left" Height="23" TextWrapping="Wrap" VerticalAlignment="Top" Width="61" Margin="244,96,0,0" Text="360"/>
+        <Label Content="Каналы" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="22,347,0,0"/>
+        <CheckBox x:Name="check_r" Content="R" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="147,352,0,0" Unchecked="Window_Loaded" Checked="Window_Loaded"/>
+        <CheckBox x:Name="check_g" Content="G" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="195,352,0,0" Unchecked="Window_Loaded" Checked="Window_Loaded"/>
+        <CheckBox x:Name="check_b" Content="B" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="244,352,0,0" Checked="Window_Loaded" Unchecked="Window_Loaded"/>
+        <Label x:Name="gs" Content="(Gray Scale)" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="244,368,0,0"/>
+        <Label Content="Отступ" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="22,268,0,0"/>
+        <TextBox x:Name="from_margin" HorizontalAlignment="Left" Height="23" TextWrapping="Wrap" Text="0" VerticalAlignment="Top" Width="55" Margin="171,270,0,0" RenderTransformOrigin="0.5,0.5">
+            <TextBox.RenderTransform>
+                <TransformGroup>
+                    <ScaleTransform/>
+                    <SkewTransform/>
+                    <RotateTransform Angle="0.047"/>
+                    <TranslateTransform/>
+                </TransformGroup>
+            </TextBox.RenderTransform>
+        </TextBox>
+        <TextBox x:Name="to_margin" HorizontalAlignment="Left" Height="23" TextWrapping="Wrap" Text="0" VerticalAlignment="Top" Width="54" Margin="262,271,0,0"/>
+        <Label Content="от" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="138,268,0,0"/>
+        <Label Content="до" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="233,268,0,0"/>
+        <Label Content="Отступов" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="22,307,0,0"/>
+        <Slider x:Name="marg_cnt" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="150,311,0,0" Width="123" StylusMove="Slider_ValueChanged" ValueChanged="Slider_ValueChanged" Maximum="100" Minimum="1"/>
+        <Label x:Name="l8" Content="0" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="287,311,0,0"/>
+
+    </Grid>
+</Window>

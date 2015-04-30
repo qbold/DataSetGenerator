@@ -1,0 +1,13 @@
+L:\WpfApplication1\WpfApplication1\libs\WPFCSharpWebCam\obj\Debug\WPFCSharpWebCam.csprojResolveAssemblyReference.cache
+L:\WpfApplication1\WpfApplication1\libs\WPFCSharpWebCam\obj\Debug\Window1.baml
+L:\WpfApplication1\WpfApplication1\libs\WPFCSharpWebCam\obj\Debug\Window1.g.cs
+L:\WpfApplication1\WpfApplication1\libs\WPFCSharpWebCam\obj\Debug\App.g.cs
+L:\WpfApplication1\WpfApplication1\libs\WPFCSharpWebCam\obj\Debug\WPFCSharpWebCam_MarkupCompile.cache
+L:\WpfApplication1\WpfApplication1\libs\WPFCSharpWebCam\obj\Debug\WPFCSharpWebCam.g.resources
+L:\WpfApplication1\WpfApplication1\libs\WPFCSharpWebCam\obj\Debug\WPFCSharpWebCam.Properties.Resources.resources
+L:\WpfApplication1\WpfApplication1\libs\WPFCSharpWebCam\obj\Debug\WPFCSharpWebCam.csproj.GenerateResource.Cache
+L:\WpfApplication1\WpfApplication1\libs\WPFCSharpWebCam\bin\Debug\WPFCSharpWebCam.exe
+L:\WpfApplication1\WpfApplication1\libs\WPFCSharpWebCam\bin\Debug\WPFCSharpWebCam.pdb
+L:\WpfApplication1\WpfApplication1\libs\WPFCSharpWebCam\bin\Debug\WebCam_Capture.dll
+L:\WpfApplication1\WpfApplication1\libs\WPFCSharpWebCam\obj\Debug\WPFCSharpWebCam.exe
+L:\WpfApplication1\WpfApplication1\libs\WPFCSharpWebCam\obj\Debug\WPFCSharpWebCam.pdb

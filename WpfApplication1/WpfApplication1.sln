@@ -1,7 +1,9 @@
 ﻿
-Microsoft Visual Studio Solution File, Format Version 11.00
-# Visual Studio 2010
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WpfApplication1", "WpfApplication1\WpfApplication1.csproj", "{2e3be0e3-81b2-4807-8833-59396a5d7f5a}"
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2013
+VisualStudioVersion = 12.0.30723.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WpfApplication1", "WpfApplication1\WpfApplication1.csproj", "{2E3BE0E3-81B2-4807-8833-59396A5D7F5A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -13,5 +15,8 @@ Global
 		{2E3BE0E3-81B2-4807-8833-59396A5D7F5A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2E3BE0E3-81B2-4807-8833-59396A5D7F5A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2E3BE0E3-81B2-4807-8833-59396A5D7F5A}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
 	EndGlobalSection
 EndGlobal

@@ -3,7 +3,6 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using Microsoft.Win32;
-using System.Windows.Shapes;
 
 
 namespace WpfApplication1
@@ -36,6 +35,7 @@ namespace WpfApplication1
             save.AddExtension = true;
             save.DefaultExt = "xml";
             save.Filter = "XML документ|*.xml|Файл libsvm|*";
+
             open = new OpenFileDialog();
             open.Filter = "XML документ|*.xml";
 
@@ -54,30 +54,6 @@ namespace WpfApplication1
                 if (!obj.is_saved) return true;
             }
             return false;
-        }
-
-        /// <summary>
-        /// Обработка нажатия кнопки закрытия приложения
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void Button_Click_1(object sender, RoutedEventArgs e)
-        {
-            bool uns = isUnsaved();
-            if (!uns || MessageBox.Show("Really close the window? There are unsaved changes.", "Closing", MessageBoxButton.YesNo) == MessageBoxResult.Yes)
-            {
-                this.Close();
-            }
-        }
-
-        /// <summary>
-        /// Перетаскивание окна
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void Rectangle_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
-        {
-            this.DragMove();
         }
 
         /// <summary>
@@ -103,7 +79,7 @@ namespace WpfApplication1
             {
                 string name = open.SafeFileName.LastIndexOf('.') < 0 ? open.SafeFileName : open.SafeFileName.Substring(0, open.SafeFileName.LastIndexOf('.'));
 
-                AddTabItem();
+                AddTabItem(false);
                 control01.SelectedIndex = control01.Items.Count - 1;
                 TabItemObject obj = ((TabItemObject)tabItems[control01.SelectedIndex]);
                 obj.cntrl.dset.ReadXml(open.FileName);
@@ -170,12 +146,12 @@ namespace WpfApplication1
         /// <summary>
         /// Добавление вкладки
         /// </summary>
-        private void AddTabItem()
+        private void AddTabItem(bool add = true)
         {
             TabItem tab = new TabItem();
             string name = GetNextName();
             TabItemObject obj = new TabItemObject(name);
-            UserControl1 cn = new UserControl1();
+            UserControl1 cn = new UserControl1(add);
             UserControl2 u2 = new UserControl2();
             u2.clear_button.Click += delegate(object sender, RoutedEventArgs e)
             {
@@ -242,103 +218,52 @@ namespace WpfApplication1
             }
         }
 
-
-        /// <summary>
-        /// Изменение стиля кнопки при наведении
-        /// </summary>
-        private Style old;
-
-        private void Button_MouseEnter(object sender, MouseEventArgs e)
+        private void Button_Click_1(object sender, System.ComponentModel.CancelEventArgs e)
         {
-            old = exit_but.Style;
-            exit_but.Style = exit_but.FocusVisualStyle;
-        }
-
-        private void exit_but_MouseLeave(object sender, MouseEventArgs e)
-        {
-            exit_but.Style = old;
-        }
-
-        /// <summary>
-        /// Тип ресайза
-        /// </summary>
-        private byte type_resize;
-        private double oldx = -1, oldy = -1;
-        private const byte LEFT = 1, RIGHT = 2, UP = 3, DOWN = 4;
-
-        /// <summary>
-        /// Правый ресайз нажали кнопку
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void Rectangle_MouseDown(object sender, MouseButtonEventArgs e)
-        {
-            Point p = e.GetPosition(this);
-            oldx = p.X;
-            oldy = p.Y;
-
-            Rectangle rect = sender as Rectangle;
-            //  rect.CaptureMouse();
-            e.Handled = true;
-
-            type_resize = (byte)int.Parse((string)rect.Tag);
-        }
-
-        /// <summary>
-        /// Правый ресайз отпустили кнопку
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void Rectangle_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
-        {
-            Rectangle rect = sender as Rectangle;
-            rect.ReleaseMouseCapture();
-            // MessageBox.Show("Release");
-
-            oldx = -1;
-            oldy = -1;
-            type_resize = 0;
-        }
-
-        /// <summary>
-        /// Двигаем мышью (изменяем размер окна)
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void Rectangle_MouseMove(object sender, MouseEventArgs e)
-        {
-            Rectangle rect = sender as Rectangle;
-            if (oldx >= 0 && rect.IsMouseCaptured)
+            bool uns = isUnsaved();
+            if (!uns || MessageBox.Show("Really close the window? There are unsaved changes.", "Closing", MessageBoxButton.YesNo) == MessageBoxResult.Yes)
             {
-                Point p = e.GetPosition(this);
-                double dx = p.X - oldx;
-                double dy = p.Y - oldy;
-
-                if ((type_resize & LEFT) != 0)
-                {
-                    // сдвигаем налево и увеличиваем размер на dx
-                    Left += dx;
-                    Width -= dx;
-                }
-                else if ((type_resize & RIGHT) != 0)
-                { // увеличиваем размер на dx
-                    Width += dx;
-                }
-
-                if ((type_resize & UP) != 0)
-                {
-                    // сдвигаем налево и увеличиваем размер на dy
-                    Top += dy;
-                    Height -= dy;
-                }
-                else if ((type_resize & DOWN) != 0)
-                { // увеличиваем размер на dy
-                    Height += dy;
-                }
-
-                oldx = p.X;
-                oldy = p.Y;
+                return;
             }
+            e.Cancel = true;
+        }
+
+        /// <summary>
+        /// Находится ли курсор в основной части окна
+        /// </summary>
+        private bool isInMainArea;
+        /// <summary>
+        /// Находится ли курсор в окне
+        /// </summary>
+        private bool isInArea;
+
+        private void Rectangle_MouseEnter(object sender, MouseEventArgs e)
+        {
+            isInMainArea = true;
+        }
+
+        private void Rectangle_MouseLeave(object sender, MouseEventArgs e)
+        {
+            isInMainArea = false;
+        }
+
+        private void Window_MouseEnter(object sender, MouseEventArgs e)
+        {
+            isInArea = true;
+        }
+
+        private void Window_MouseLeave(object sender, MouseEventArgs e)
+        {
+            isInArea = false;
+        }
+
+        /// <summary>
+        /// Обновить состояние окна (если наведены на заголовок, сделать его непрозрачным и т.д.)
+        /// </summary>
+        private void Window_MouseMove(object sender, MouseEventArgs e)
+        {
+            bool isa = isInArea && !isInMainArea;
+            WindowStyle = isa ? WindowStyle.SingleBorderWindow : WindowStyle.None;
         }
     }
 }

@@ -1,0 +1,21 @@
+﻿<UserControl x:Class="WpfApplication1.UserControl2"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             mc:Ignorable="d" Height="20">
+    <StackPanel Orientation="Horizontal">
+        <Label x:Name="label" Content="Label" Height="23"/>
+        <Button x:Name="clear_button" Content="" Width="20" Height="20" BorderBrush="White">
+        	<Button.Background>
+        		<RadialGradientBrush>
+        			<GradientStop Color="#FF0061FF"/>
+        			<GradientStop Color="#FF3481FF" Offset="1"/>
+        		</RadialGradientBrush>
+        	</Button.Background>
+        	<Button.OpacityMask>
+        		<ImageBrush ImageSource="X.png"/>
+        	</Button.OpacityMask>
+        </Button>
+    </StackPanel>
+</UserControl>

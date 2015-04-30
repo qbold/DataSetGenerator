@@ -14,6 +14,8 @@ namespace WpfApplication1
             array = new List<PriorityObject<T>>(c);
         }
 
+        public List<PriorityObject<T>> Array { get { return array; } }
+
         /// <summary>
         /// Количество объектов
         /// </summary>
@@ -48,6 +50,16 @@ namespace WpfApplication1
         {
             array.Add(new PriorityObject<T>(t, priority));
             //buildHeap();
+        }
+
+        /// <summary>
+        /// Взять объект с заданным индексом
+        /// </summary>
+        /// <param name="ind"></param>
+        /// <returns></returns>
+        public T GetAt(int ind)
+        {
+            return array[ind].obj;
         }
 
         /// <summary>
